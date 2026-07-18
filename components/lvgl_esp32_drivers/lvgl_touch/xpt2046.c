@@ -13,6 +13,7 @@
 #include "esp_timer.h"
 #include "sdkconfig.h"
 #include "tp_spi.h"
+#include "esp_timer.h"
 #include "xpt2046_bitbang.h"
 #include <stddef.h>
 
@@ -135,6 +136,10 @@ bool xpt2046_read(lv_indev_drv_t * drv, lv_indev_data_t * data)
         ESP_LOGV(TAG, "P_norm(%d,%d)", x, y);
 #endif
         
+        {int64_t _n = esp_timer_get_time();
+         if (_n - last_debug_us > 200000) {
+             ESP_LOGI(TAG, "TOUCHRAW nx=%d ny=%d", x, y);
+             last_debug_us = _n; } }
         xpt2046_corr(&x, &y);
         xpt2046_avg(&x, &y);
         last_x = x;
