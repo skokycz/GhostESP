@@ -239,7 +239,15 @@ void settings_set_defaults(FSettings *settings) {
   settings->encoder_invert_direction = false;
   settings->rgb_led_count = CONFIG_NUM_LEDS;
   settings->auto_save_scans = true;
+#ifdef CONFIG_BUILD_CONFIG_TEMPLATE
+  /* DIAGNOSTIC WORKAROUND (cyberdeck_s3): device resets when Splash Screen
+   * transitions into Setup Wizard on first boot, before a panic/backtrace
+   * can be captured over native USB. Skip the wizard on this board only so
+   * the device is usable while the underlying crash is investigated. */
+  settings->setup_complete = (strcmp(CONFIG_BUILD_CONFIG_TEMPLATE, "cyberdeck_s3") == 0) ? true : false;
+#else
   settings->setup_complete = false;
+#endif
   settings->wifi_country = 0;
   strcpy(settings->wigle_api_key, "");
   settings->wigle_auto_upload = false; // Default to off
@@ -716,7 +724,12 @@ void settings_load(FSettings *settings) {
   if (err == ESP_OK) {
     settings->setup_complete = (bool)value_u8;
   } else {
+#ifdef CONFIG_BUILD_CONFIG_TEMPLATE
+    /* DIAGNOSTIC WORKAROUND (cyberdeck_s3): see setup_defaults() above. */
+    settings->setup_complete = (strcmp(CONFIG_BUILD_CONFIG_TEMPLATE, "cyberdeck_s3") == 0) ? true : false;
+#else
     settings->setup_complete = false;
+#endif
   }
 
   err = nvs_get_u8(nvsHandle, NVS_WIFI_COUNTRY_KEY, &value_u8);
